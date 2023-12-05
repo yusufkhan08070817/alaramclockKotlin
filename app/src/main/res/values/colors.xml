@@ -2,4 +2,6 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    <color name="clockback1">#08375C</color>
+    <color name="clockback2">#1B5581</color>
 </resources>

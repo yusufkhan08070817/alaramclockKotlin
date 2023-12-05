@@ -12,7 +12,7 @@ class AleramSchudler(private val context: Context):Alarmschedularinterface
     override fun schedule(item: alermitem) {
         val intent=Intent(context,AlarmReceiver::class.java).apply {
             putExtra("extramsg",item.message.toString())
-
+            putExtra("option",item.option.toString())
         }
         alarmmanager.setExactAndAllowWhileIdle(
             AlarmManager.RTC_WAKEUP,item.time.atZone(ZoneId.systemDefault()).toEpochSecond()*1000,PendingIntent.getBroadcast(context,item.hashCode(),intent,PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)

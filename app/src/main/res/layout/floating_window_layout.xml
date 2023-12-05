@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+<ImageView
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:src="@drawable/backtemp"
+    android:id="@+id/backfl"
+    android:scaleType="centerCrop"
+    />
+
+    <RelativeLayout
+        android:id="@+id/floatingrelativelay"
+        android:layout_width="200dp"
+        android:layout_height="200dp"
+
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="120dp">
+
+        <ImageView
+            android:layout_width="200dp"
+            android:layout_height="200dp"
+            android:src="@drawable/clock" />
+
+        <ImageView
+            android:id="@+id/sec"
+            android:layout_width="10dp"
+            android:layout_height="70dp"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="30dp"
+            android:src="@drawable/sec" />
+        <ImageView
+
+            android:layout_width="10dp"
+            android:layout_height="10dp"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="95dp"
+            android:src="@drawable/blackdote" />
+
+        <ImageView
+            android:id="@+id/min"
+            android:layout_width="20dp"
+            android:layout_height="60dp"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="40dp"
+            android:src="@drawable/min" />
+
+        <ImageView
+            android:id="@+id/hr"
+            android:layout_width="10dp"
+            android:layout_height="50dp"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="50dp"
+            android:src="@drawable/hr" />
+    </RelativeLayout>
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/btnStopService"
+        android:text="Stope"
+        android:layout_below="@+id/floatingrelativelay"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="40dp"
+        android:backgroundTint="#3CB3B3B3"
+        />
+</RelativeLayout>

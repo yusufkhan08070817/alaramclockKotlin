@@ -2,11 +2,14 @@ package com.yushika.alaramclock
 
 import android.annotation.SuppressLint
 import android.app.WallpaperManager
+import android.content.Intent
+import android.net.Uri
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.Handler
 import android.os.HandlerThread
+import android.provider.Settings
 import android.speech.tts.TextToSpeech
 import android.util.Log
 import android.view.LayoutInflater
@@ -14,11 +17,16 @@ import android.view.View
 import android.widget.ImageView
 import android.widget.Toast
 import androidx.annotation.RequiresApi
+import androidx.core.graphics.Insets
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.LinearSnapHelper
 import androidx.recyclerview.widget.RecyclerView
+import com.yushika.alaramclock.classes.FloatingWindowService
 import com.yushika.alaramclock.classes.Handlerclass
 import com.yushika.alaramclock.classes.MyAdapter
+import com.yushika.alaramclock.classes.TextToWhatsApp
 
 import com.yushika.alaramclock.classes.permision
 import com.yushika.alaramclock.databinding.ActivityMainBinding
@@ -29,10 +37,12 @@ import java.time.LocalDateTime
 import java.util.Date
 import java.util.Locale
 
-class MainActivity : AppCompatActivity(),TextToSpeech.OnInitListener {
+class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
     lateinit var bind: ActivityMainBinding
     private lateinit var timeformat: SimpleDateFormat
     private val PermissionsRequestCode = 123
+
+    private val overlayPermissionRequestCode = 123
     private lateinit var managePermissions: permision
     lateinit var arrayhr: ArrayList<String>
     lateinit var arraymin: ArrayList<String>
@@ -43,6 +53,11 @@ class MainActivity : AppCompatActivity(),TextToSpeech.OnInitListener {
 
     companion object {
         lateinit var textToSpeech: TextToSpeech
+        var hr: Int = 0
+        var min: Int = 0
+        var sec: Int = 0
+@SuppressLint("StaticFieldLeak")
+lateinit var ws:TextToWhatsApp
     }
 
     @SuppressLint("SetTextI18n")
@@ -50,16 +65,24 @@ class MainActivity : AppCompatActivity(),TextToSpeech.OnInitListener {
         super.onCreate(savedInstanceState)
         bind = ActivityMainBinding.inflate(layoutInflater)
         setContentView(bind.root)
+        extendContentBehindNavigationBar()
+        window.decorView.apply {
+            // Hide both the navigation bar and the status bar.
+            // SYSTEM_UI_FLAG_FULLSCREEN is only available on Android 4.1 and higher, but as
+            // a general rule, you should design your app to hide the status bar whenever you
+            // hide the navigation bar.
+            systemUiVisibility =
+                View.SYSTEM_UI_FLAG_HIDE_NAVIGATION or View.SYSTEM_UI_FLAG_FULLSCREEN
+        }
         textToSpeech = TextToSpeech(this, this)
         textToSpeech = TextToSpeech(this, this)
-        var hr: Int = 0
-        var min: Int = 0
-        var sec: Int = 0
+
         window()
         val list = listOf<String>(
             android.Manifest.permission.MANAGE_EXTERNAL_STORAGE,
             android.Manifest.permission.READ_EXTERNAL_STORAGE
         )
+      //  startFloatingWindowService()
         hr()
         min()
         arrayampm.add("Alarm")
@@ -101,6 +124,7 @@ class MainActivity : AppCompatActivity(),TextToSpeech.OnInitListener {
 
 
             bind.digiclock.text = "$hr : $min : $sec"
+            Log.e("currentrecycler","$chr $cmin $campm")
 
         }, 1)
 
@@ -125,21 +149,59 @@ class MainActivity : AppCompatActivity(),TextToSpeech.OnInitListener {
         repo(bind.listampm, ampmlaymanager, 3)
         val alerm = AleramSchudler(this)
         bind.setalarm.setOnClickListener {
-var senthr=hr-chr
-            if (senthr<0)
-            {
+            var senthr = hr - chr
+            if (senthr < 0) {
                 senthr *= -1
             }
-            var sentmin=min-cmin
-            if (sentmin<0)
+            var sentmin = min - cmin
+            if (sentmin < 0)
                 sentmin *= -1
-            var timetoset:Long=((senthr*60)+sentmin*60).toLong()
-            Log.e("settime",timetoset.toString())
-            val alarmitem=  alermitem(time = LocalDateTime.now().plusSeconds(timetoset),bind.customtext.text.toString())
-            alarmitem.let (alerm::schedule)
+            var timetoset: Long = ((senthr * 60) + sentmin * 60) - sec.toLong()
+            Log.e("settime", timetoset.toString())
+            val alarmitem = alermitem(
+                time = LocalDateTime.now().plusSeconds(timetoset),
+                bind.customtext.text.toString(),campm
+            )
+            ws= TextToWhatsApp( bind.customtext.text.toString(),this)
+            alarmitem.let(alerm::schedule)
+            Toast.makeText(this, "set", Toast.LENGTH_SHORT).show()
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            checkOverlayPermission()
+        } else {
 
         }
     }
+    private fun startFloatingWindowService() {
+        startService(Intent(this, FloatingWindowService::class.java))
+    }
+    private fun checkOverlayPermission() {
+        if (!Settings.canDrawOverlays(this)) {
+            val intent = Intent(
+                Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                Uri.parse("package:$packageName")
+            )
+            startActivityForResult(intent, overlayPermissionRequestCode)
+        } else {
+
+        }
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == overlayPermissionRequestCode) {
+            if (Settings.canDrawOverlays(this)) {
+
+            } else {
+                Toast.makeText(
+                    this,
+                    "Overlay permission not granted. Cannot show floating window.",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+        }
+    }
+
 
     fun retrieveWallpaper() {
 
@@ -225,6 +287,24 @@ var senthr=hr-chr
             if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) {
                 Toast.makeText(this, "Language not supported", Toast.LENGTH_SHORT).show()
             }
+        }
+    }
+    private fun extendContentBehindNavigationBar() {
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(android.R.id.content)) { _, insets ->
+            val systemGestureInsets = insets.systemGestureInsets
+            ViewCompat.onApplyWindowInsets(
+                findViewById(android.R.id.content),
+                WindowInsetsCompat.Builder()
+                    .setSystemGestureInsets(
+                        Insets.of(
+                            systemGestureInsets.left,
+                            systemGestureInsets.top,
+                            systemGestureInsets.right,
+                            0
+                        )
+                    )
+                    .build()
+            )
         }
     }
 }
