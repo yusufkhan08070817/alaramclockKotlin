@@ -142,6 +142,7 @@ secl=floatingView.findViewById(R.id.sec)
         // Remove the view when the service is destroyed
         if (floatingView.isAttachedToWindow) {
             windowManager.removeView(floatingView)
+            alerm.let { alerm::cancle }
         }
     }
 }
